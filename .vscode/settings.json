@@ -1,0 +1,17 @@
+{
+    "editor.minimap.enabled": false,
+    "editor.wrappingIndent": "indent",
+    "editor.overviewRulerBorder": false,
+    "editor.lineHeight": 18,
+    "[latex]": {
+        "editor.quickSuggestions": true,
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
+    },
+    "workbench.colorTheme": "Gruvbox Light Hard",
+    "git.enableSmartCommit": true,
+    // "git.postCommitCommand": "sync",
+    "files.exclude": {},
+    "files.watcherExclude": {},
+    "latex-workshop.synctex.afterBuild.enabled": true,
+}

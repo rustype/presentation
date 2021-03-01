@@ -1,0 +1,39 @@
+% !TEX root = ./main.tex
+\documentclass[notes]{beamer}
+\usetheme{metropolis}
+\title{Bridging the gap between Typestates and Rust in production code}
+\author{\textbf{José Duarte}\texorpdfstring{\\ António Ravara (Advisor)}{}}
+\date{March 2021}
+\institute{NOVA School of Science and Technology}
+
+\usepackage{pgfpages}
+\usepackage{hyperref}
+\usepackage{listings}
+\lstset{
+    basicstyle=\small\ttfamily,
+    frame=single,
+    % numberstyle=\tiny,
+    % numbers=left
+}
+
+\setbeameroption{show notes on second screen}
+
+\begin{document}
+
+\begin{frame}[plain]
+    \titlepage
+
+    \note{
+        Hello everyone! My name is José Duarte and today I will be talking about using typestates in Rust.
+        I'll present:
+        \begin{itemize}
+            \item A brief definition of typestates.
+            \item Why they are useful.
+            \item And finally I'll discuss their relationship with Rust and my proposal to integrate them in the ecosystem.
+        \end{itemize}
+    }
+\end{frame}
+
+\begin{frame}\frametitle{Outline}\tableofcontents\end{frame}
+
+\end{document}
