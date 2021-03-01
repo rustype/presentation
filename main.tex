@@ -1,20 +1,35 @@
 % !TEX root = ./main.tex
-\documentclass[notes]{beamer}
+\documentclass[bigger,notes]{beamer}
 \usetheme{metropolis}
 \title{Bridging the gap between Typestates and Rust in production code}
 \author{\textbf{José Duarte}\texorpdfstring{\\ António Ravara (Advisor)}{}}
 \date{March 2021}
 \institute{NOVA School of Science and Technology}
 
+\usepackage{tikz}
+\usetikzlibrary{shapes,backgrounds,positioning}
+\usepackage{xcolor}
+
 \usepackage{pgfpages}
 \usepackage{hyperref}
-\usepackage{listings}
-\lstset{
-    basicstyle=\small\ttfamily,
+% \usepackage{listings}
+% \lstset{
+%     basicstyle=\small\ttfamily,
+%     frame=single,
+%     % numberstyle=\tiny,
+%     % numbers=left
+% }
+
+\usepackage[newfloat]{minted}
+\setminted{
+    linenos,
     frame=single,
-    % numberstyle=\tiny,
-    % numbers=left
+    style=lovelace,
+    fontsize=\small,
 }
+
+\usepackage[main=american,portuguese]{babel}
+\babeltags{pt=portuguese, enUS=american}
 
 \setbeameroption{show notes on second screen}
 
@@ -34,6 +49,315 @@
     }
 \end{frame}
 
-\begin{frame}\frametitle{Outline}\tableofcontents\end{frame}
+\AtBeginSection[]
+{
+    \begin{frame}
+        \frametitle{Outline}
+        \tableofcontents[currentsection, hideothersubsections]
+    \end{frame}
+}
+
+\begin{frame}
+    \frametitle{Outline}
+    \tableofcontents[hideallsubsections]
+
+    \note{
+        \begin{pt}
+            Durante a apresentação irei introduzir o tema,
+            rever sumáriamente o estado da arte,
+            apresentar a proposta de trabalho e
+            por fim rever o plano de trabalho da mesma.
+        \end{pt}
+    }
+\end{frame}
+
+
+\section{Introduction}
+
+\subsection{Context}
+\begin{frame}
+    \frametitle{Context}
+    Software plays a crucial role in our lives.
+    \begin{itemize}
+        \item From web browsers, to word processors and more!
+    \end{itemize}
+
+    As software becomes more important, bugs become more expensive.
+    \begin{itemize}
+        \item Losing work due to a bug in the save procedure is not nice.
+        \item A bug in the firmware for a pacemaker may cost a life.
+    \end{itemize}
+\end{frame}
+
+\subsection{Problem}
+\begin{frame}
+    \frametitle{Problem}
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \def\X{2}
+            \def\fstX{-\X}
+            \def\sndX{\X}
+            \def\Y{3}
+            \def\fstcircle{(\fstX,0) circle (2.5)}
+            \def\sndcircle{(\sndX,0) circle (2.5)}
+
+            \begin{scope}[fill opacity=0.35]
+                \fill[red] \sndcircle;
+                \fill[blue] \fstcircle;
+            \end{scope}
+
+            \draw \fstcircle;
+            \draw \sndcircle;
+
+            \node at (\fstX, \Y) {Preventable};
+            \node at (\sndX, \Y) {Prevented};
+        \end{tikzpicture}
+        \caption{Diagram of preventable bugs and prevented bugs.}
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Problem - with Rust}
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \def\X{1.25}
+            \def\fstX{-\X}
+            \def\sndX{\X}
+            \def\Y{3}
+            \def\fstcircle{(\fstX,0) circle (2.5)}
+            \def\sndcircle{(\sndX,0) circle (2.5)}
+
+            \begin{scope}[fill opacity=0.35]
+                \fill[red] \sndcircle;
+                \fill[blue] \fstcircle;
+            \end{scope}
+
+            \draw \fstcircle;
+            \draw \sndcircle;
+
+            \node at (\fstX, \Y) {Preventable};
+            \node at (\sndX, \Y) {Prevented};
+        \end{tikzpicture}
+        \caption{Diagram of preventable bugs and prevented bugs when considering Rust's borrow checker.}
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Problem - Ideal}
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \def\X{0}
+            \def\fstX{-\X}
+            \def\sndX{\X}
+            \def\Y{0}
+            \def\fstcircle{(\fstX,0) circle (2.5)}
+            \def\sndcircle{(\sndX,0) circle (2.5)}
+
+            \begin{scope}[fill opacity=0.35]
+                \fill[red] \sndcircle;
+                \fill[blue] \fstcircle;
+            \end{scope}
+
+            \draw \fstcircle;
+            \draw \sndcircle;
+
+            \node at (\fstX-4, \Y) {Preventable};
+            \node at (\sndX+4, \Y) {Prevented};
+        \end{tikzpicture}
+        \caption{The ideal diagram of preventable bugs and prevented bugs, where all bugs are prevented.}
+    \end{figure}
+\end{frame}
+
+\subsection{Objectives}
+\begin{frame}
+    \frametitle{Objectives}
+
+    A library which brings \emph{practical} typestates to Rust.
+    \begin{itemize}
+        \item Minimal learning overhead.
+        \item Zero-cost abstraction.
+        \item Scalable to large projects.
+    \end{itemize}
+
+
+\end{frame}
+
+\section{State of the Art}
+\subsection{Session Types}
+\begin{frame}
+    \frametitle{Session Types}
+
+\end{frame}
+
+\subsection{Typestates}
+\begin{frame}
+    \frametitle{Typestates}
+
+\end{frame}
+
+\section{Case Study}
+
+\subsection{Problem}
+\begin{frame}[fragile]
+    \frametitle{Problem} % ???
+    Error happens at runtime, possibly crashing the program.
+
+    \begin{minted}{Rust}
+fn main() {
+    let protocol = Protocol::new();
+    protocol.step1();
+    protocol.step3(); // runtime error
+    protocol.step2();
+}
+    \end{minted}
+
+\end{frame}
+
+\subsection{Solution}
+\begin{frame}[fragile]
+    \frametitle{Solution}
+    Catch the error during compile-time.
+    \begin{minted}{text}
+fn main() {
+    let protocol = Protocol::new();
+    protocol.step1();
+    protocol.step3();
+             ^^^^^^^
+             | error: cannot call `step3`
+    protocol.step2();
+}
+    \end{minted}
+
+\end{frame}
+
+\subsection{Approach}
+\begin{frame}
+    \frametitle{Approach - Overview}
+
+    Use macros!
+    \begin{itemize}
+        \item Integral part of the language, requiring no new experience.
+        \item Able to throw errors during compile-time.
+        \item Rewrite the annotated code, generating boilerplate for the user.
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Approach - Going deeper}
+
+    \begin{figure}
+        \centering
+        \scalebox{0.75}{%
+        \begin{tikzpicture}
+            \tikzstyle{code} = [font=\tiny, align=left]
+            \tikzstyle{phase} = [below, font=\small\itshape]
+
+            \def\xSpec{0}
+            \def\xAST{4}
+            \def\xFSM{8}
+            \def\xCode{12}
+            \def\yLabel{-1.75}
+
+            \node[code] (code) at (\xSpec,0) {\mintinline{rust}{#[typestate]}\\\mintinline{rust}{// ...}};
+
+            \begin{scope}[shift={(\xAST, 0.75)}]
+                \tikzstyle{n}=[circle, draw=blue!70, fill=blue!20]
+                \node[n] (root) at (0, 0) {};
+                \node[n] (l1) at (-0.35, -0.75) {};
+                \node[n] (l2) at (0.35, -0.75) {};
+                \node[n] (l11) at (-0.7, -1.5) {};
+                \draw[-] (root) -- (l1);
+                \draw[-] (root) -- (l2);
+                \draw[-] (l1) -- (l11);
+            \end{scope}
+
+            \begin{scope}[shift={(\xFSM, 0.75)}]
+                \tikzstyle{n}=[circle, draw=blue!70, fill=blue!20]
+                \tikzstyle{f}=[circle, draw=red!70, fill=red!20]
+                \tikzstyle{s}=[circle, draw=green!70, fill=green!20]
+                \node[s] (root) at (0, 0) {};
+                \node[n] (l1) at (-0.5, -0.75) {};
+                \node[n] (l2) at (0.5, -0.75) {};
+                \node[f] (l11) at (0, -1.5) {};
+                \draw[->] (root) -- (l1);
+                \draw[->] (root) -- (l2);
+                \draw[->] (l1) -- (l11);
+                \draw[->] (l2) -- (l1);
+            \end{scope}
+
+            \node[code] (rust-code) at (\xCode,0) {\mintinline{rust}{struct S { ... }}\\\mintinline{rust}{trait SOps { ... }}\\\mintinline{rust}{// ...}};
+
+            % \draw[->, thick] (code) -> (2.5, 0);
+            % \draw[->, thick] (4.5, 0) -> (5, 0);
+            % \draw[->, thick] (7, 0) -> (rust-code);
+
+            \node[align=center] (label-1) at (\xSpec, \yLabel) {Typestate\\Specification};
+            \node[align=center] (label-2) at (\xAST, \yLabel) {AST};
+            \node[align=center] (label-3) at (\xFSM, \yLabel) {State\\Machine};
+            \node[align=center] (label-4) at (\xCode, \yLabel) {Rust\\Code};
+
+            \draw[->, thick] (label-1) -- node[phase] {Parse} (label-2);
+            \draw[->, thick] (label-2) -- node[phase] {Convert} (label-3);
+            \draw[->, thick] (label-3) -- node[phase] {Check: Ok} (label-4);
+            \draw[->, thick] (label-3) edge[in=-35, out=-145] node[phase] {Check: Error} (label-1);
+
+        \end{tikzpicture}
+        }
+        \label{fig:dsl-processing}
+    \end{figure}
+
+\end{frame}
+
+\subsection{Workflow}
+\begin{frame}[fragile]
+    \frametitle{Workflow}
+
+    \begin{listing}
+        \centering
+        \begin{minted}{rust}
+#[typestate] mod M {
+    struct Drone { location: Coordinates } // available in every state structure
+    #[state] struct Grounded;
+    #[state] struct Hovering;
+    #[state] struct Flying {
+        destination: Coordinates
+    }
+    #[state] enum Landed {
+        Success(Grounded),  // touchdown!!
+        Error               // crashed
+    }
+    fn get_location(self: &Grounded) -> &Coordinates;
+    fn correct_coordinates(self: &mut Grounded);
+    fn take_off(self: Grounded) -> Hovering;
+    fn fly_to(self: Hovering, dst: Coordinates) -> Hovering;
+    fn land(self: Hovering) -> Landed;
+    fn new() -> Grounded;   // defines the start state
+    fn end(self: Grounded); // defines the final state
+}
+        \end{minted}
+        \caption{
+            Example specification of the \texttt{Drone} typestate using the proposed DSL.
+        }
+        \label{lst:dsl-typestate-spec}
+    \end{listing}
+
+\end{frame}
+
+\section{Plan}
+
+\begin{frame}
+    \frametitle{Plan Overview}
+
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=\linewidth]{planning.png}
+        \caption{Work plan Gantt chart}
+    \end{figure}
+
+\end{frame}
 
 \end{document}
