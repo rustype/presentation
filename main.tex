@@ -213,13 +213,13 @@ fn main() {
     protocol.step2();
 }
     \end{minted}
-
+    Our tools should work for us, not make us work for them.
 \end{frame}
 
 \subsection{Solution}
 \begin{frame}[fragile]
     \frametitle{Solution}
-    Catch the error during compile-time.
+    Ideally, we want to catch the error at compile-time.
     \begin{minted}{text}
 fn main() {
     let protocol = Protocol::new();
@@ -237,6 +237,9 @@ fn main() {
 \begin{frame}
     \frametitle{Approach - Overview}
 
+    We can exploit the Rust typesystem to emulate typestates,
+    however this approach requires boilerplate.
+
     Use macros!
     \begin{itemize}
         \item Integral part of the language, requiring no new experience.
@@ -251,7 +254,6 @@ fn main() {
 
     \begin{figure}
         \centering
-        \scalebox{0.75}{%
         \begin{tikzpicture}
             \tikzstyle{code} = [font=\tiny, align=left]
             \tikzstyle{phase} = [below, font=\small\itshape]
@@ -306,45 +308,139 @@ fn main() {
             \draw[->, thick] (label-3) edge[in=-35, out=-145] node[phase] {Check: Error} (label-1);
 
         \end{tikzpicture}
-        }
-        \label{fig:dsl-processing}
     \end{figure}
 
 \end{frame}
 
 \subsection{Workflow}
 \begin{frame}[fragile]
-    \frametitle{Workflow}
+    \frametitle{Workflow - Design the state machine}
+    Consider a traffic light as a state machine.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node[circle, thick, minimum size=0.75cm, draw=green!70, fill=green!30] (g) at (0, 0) {};
+            \node[circle, thick, minimum size=0.75cm, draw=yellow, fill=yellow!50] (y) at (4, 0) {};
+            \node[circle, thick, minimum size=0.75cm, draw=red!70, fill=red!30] (r) at (8, 0) {};
+            \node[circle, thick, minimum size=0.6cm, draw=red!70, fill opacity=0] at (8, 0) {};
+            \draw[->, very thick, draw=black!70] (g) -- node[above, font=\small\ttfamily] {to\_yellow} (y);
+            \draw[->, very thick, draw=black!70] (y) -- node[above, font=\small\ttfamily] {to\_red} (r);
+            \draw[->, very thick, draw=black!70] (r) edge[in=-30, out=-150] node[above, font=\small\ttfamily] {to\_green} (g);
+            \draw[->, very thick, draw=black!70] (8, 1) -- node[right, font=\small\ttfamily] {turn\_on} (r);
+            \draw[->, very thick, draw=black!70] (r) edge[loop below] node[below, font=\small\ttfamily] {turn\_off} (r);
+        \end{tikzpicture}
+    \end{figure}
+\end{frame}
 
+\begin{frame}[fragile]
+    \frametitle{Workflow - Declaring state in Rust}
+    Using the DSL we first declare the module, main automata and the states:
     \begin{listing}
         \centering
         \begin{minted}{rust}
-#[typestate] mod M {
-    struct Drone { location: Coordinates } // available in every state structure
-    #[state] struct Grounded;
-    #[state] struct Hovering;
-    #[state] struct Flying {
-        destination: Coordinates
-    }
-    #[state] enum Landed {
-        Success(Grounded),  // touchdown!!
-        Error               // crashed
-    }
-    fn get_location(self: &Grounded) -> &Coordinates;
-    fn correct_coordinates(self: &mut Grounded);
-    fn take_off(self: Grounded) -> Hovering;
-    fn fly_to(self: Hovering, dst: Coordinates) -> Hovering;
-    fn land(self: Hovering) -> Landed;
-    fn new() -> Grounded;   // defines the start state
-    fn end(self: Grounded); // defines the final state
+#[typestate] mod traffic_light {
+    #[automata] struct TrafficLight;
+    #[state] struct Green;
+    #[state] struct Yellow;
+    #[state] struct Red;
+    // ...
+        \end{minted}
+    \end{listing}
+    We still need transitions!
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Workflow - Declaring transitions in Rust}
+    All transition functions take ownership of the current state and return the new state.
+    \begin{listing}
+        \centering
+        \begin{minted}{rust}
+    // code from the previous slide ...
+    fn to_yellow(self: Green) -> Yellow;
+    fn to_red(self: Yellow) -> Red;
+    fn to_green(self: Red) -> Green;
+    // ...
+        \end{minted}
+    \end{listing}
+    Finally, we need \emph{start} and \emph{end} states.
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Workflow - Declaring \emph{start} and \emph{end} states in Rust}
+    Functions that do not use \texttt{self} and \emph{return} a valid state are inferred as the \emph{start} state.
+
+    Functions that take \texttt{self} and do \emph{not return }a valid state are inferred as the \emph{end} state.
+    \begin{listing}
+        \centering
+        \begin{minted}{rust}
+    // code from the previous slides ...
+    fn turn_on() -> Red;
+    fn turn_off(self: Red);
 }
         \end{minted}
-        \caption{
-            Example specification of the \texttt{Drone} typestate using the proposed DSL.
-        }
-        \label{lst:dsl-typestate-spec}
     \end{listing}
+    Our traffic light is ready!
+\end{frame}
 
+\begin{frame}[fragile]
+    \frametitle{Workflow - The other features}
+    There are still other important features left.
+    For maintenance purposed, consider that our traffic light is now required to count every \texttt{GYR} cycle. % Green->Yellow->Red
+
+    The \texttt{TrafficLight} structure is now declared as follows:
+    \begin{listing}
+    \centering
+        \begin{minted}{rust}
+#[automata] struct TrafficLight { cycles:u64 }
+        \end{minted}
+    \end{listing}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Workflow - The other features}
+    How can we check if the light requires maintenance?
+
+    We add a \texttt{pure} function:
+    \begin{listing}
+    \centering
+        \begin{minted}{rust}
+fn requires_maintenance(
+    &self: TrafficLight
+) -> bool;
+        \end{minted}
+    \end{listing}
+    This function is not able to perform mutations due to the immutable reference (\texttt{\&}).
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Workflow - The other features}
+    How can we check if the light requires maintenance?
+
+    We add a \texttt{pure} function:
+    \begin{listing}
+    \centering
+        \begin{minted}{rust}
+fn requires_maintenance(
+    self: &TrafficLight
+) -> bool;
+        \end{minted}
+    \end{listing}
+    This function is not able to perform mutations due to the immutable reference (\texttt{\&}).
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Workflow - The other features}
+    After maintenance, how can we reset the counter?
+
+    We add an \texttt{impure} function:
+    \begin{listing}
+    \centering
+        \begin{minted}{rust}
+fn reset_counter(self: &mut TrafficLight);
+        \end{minted}
+    \end{listing}
+    The function is able to perform mutations, due to usage of a mutable reference (\texttt{\&mut}),
+    but it is unable to transition between states.
 \end{frame}
 
 \section{Plan}
