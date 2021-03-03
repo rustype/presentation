@@ -1,5 +1,5 @@
 % !TEX root = ./main.tex
-\documentclass[bigger,notes]{beamer}
+\documentclass[bigger,notes,aspectratio=169]{beamer}
 \usetheme{metropolis}
 \title{Bridging the gap between Typestates and Rust in production code}
 \author{\textbf{José Duarte}\texorpdfstring{\\ António Ravara (Advisor)}{}}
@@ -8,6 +8,15 @@
 
 \usepackage{tikz}
 \usetikzlibrary{shapes,backgrounds,positioning}
+\tikzset{
+    invisible/.style={opacity=0,text opacity=0},
+    normal/.style={opacity=1,text opacity=1},
+    visible on/.style={alt=#1{}{invisible}},
+    bold on/.style={alt=#1{font=\bfseries}{normal}},
+    alt/.code args={<#1>#2#3}{%
+      \alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}} % \pgfkeysalso doesn't change the path
+    },
+}
 \usepackage{xcolor}
 
 \usepackage{pgfpages}
@@ -21,7 +30,6 @@
 % }
 
 \usepackage{amssymb}
-
 
 \usepackage[newfloat]{minted}
 \setminted{
@@ -45,7 +53,7 @@
         \begin{pt}
             Bom dia Professor(es), sou o José Duarte, e o meu tema de tese é "Bridging the gap between typestates and Rust in production code".
 
-            O tema é orientado pelo Professor António Ravara.
+            % O tema é orientado pelo Professor António Ravara.
         \end{pt}
     }
 \end{frame}
@@ -58,23 +66,6 @@
     \end{frame}
 }
 
-\begin{frame}
-    \frametitle{Outline}
-    \tableofcontents[hideallsubsections]
-
-    \note{
-        \begin{pt}
-            Durante a apresentação irei:
-            \begin{itemize}
-                \item Introduzir o tema.
-                \item Rever sumariamente o estado da arte.
-                \item Rever um caso de estudo simples, apresentando assim o projeto.
-                \item Por fim, falar do plano de trabalho para o semestre.
-            \end{itemize}
-        \end{pt}
-    }
-\end{frame}
-
 \section{Introduction}
 
 \note{
@@ -84,7 +75,6 @@
             \item Contextualizar o tema da tese.
             \item Apresentar o problema que a mesma visa endereçar.
             \item Os objetivos da tese.
-            \item Finalmente, o que são typestates, antes de aprofundar nas secções seguintes.
         \end{itemize}
     \end{pt}
 }
@@ -142,7 +132,8 @@
             onde se inserem dois subconjuntos.
             Os bugs que podemos prevenir e os que, de facto, conseguimos prevenir.
 
-            Por exemplo, erros de gestão de memória e mau uso de APIs.
+            Os que prevenimos são, por exemplo, type mismatch errors;
+            os erros que não conseguimos produzir são, por exemplo, gestão de memória.
         \end{pt}
     }
 \end{frame}
@@ -205,6 +196,37 @@
         \begin{pt}
             O ideal seria uma sobreposição total, como na figura.
             Os typestates ajudam-nos a dar um passo nesta direção.
+
+            Apesar da programação defensiva tentar maximizar os erros prevenidos,
+            existe sempre o limite do erro humano.
+        \end{pt}
+    }
+\end{frame}
+
+% \subsection{Problem}
+\begin{frame}[fragile]
+    \frametitle{Problem} % ???
+    Error happens at runtime, possibly crashing the program.
+
+    \begin{minted}{Rust}
+fn main() {
+    let protocol = Protocol::new();
+    protocol.step1();
+    protocol.step3(); // runtime error
+    protocol.step2();
+}
+    \end{minted}
+    Our tools should work for us, not make us work for them.
+
+    \note{
+        \begin{pt}
+            Queremos diminuir os bugs.
+            No entanto, os bugs que queremos endereçar são principalmente maus usos das APIs.
+
+            Como na figura, o programa iria lançar um panico.
+            Enquanto programadores, queremos que a máquina trabalhe por nós, não ao contrário.
+
+            Minimizando assim o tempo de debug, e a complexidade associada ao trabalho.
         \end{pt}
     }
 \end{frame}
@@ -215,9 +237,11 @@
     A library which brings \emph{practical} typestates to Rust.
     \begin{itemize}
         \item Minimal learning overhead.
-        \item Zero-cost abstraction.
+              % \item Zero-cost abstraction.
         \item Scalable to large projects.
     \end{itemize}
+
+    Typestates are an approach to behavioral types that allow the developer to cleanly and concisely express API constraints.
 
     \note{
         \begin{pt}
@@ -229,38 +253,38 @@
                 \item Não devem impactar a performance durante o runtime.
                 \item Devem escalar a projetos grandes.
             \end{itemize}
-        \end{pt}
-    }
-\end{frame}
-
-\subsection{What are typestates?}
-\begin{frame}
-    \frametitle{What are typestates?}
-    Typestates are an approach to behavioral types.
-
-    They can be modelled as state-machines and allow the developer to cleanly and concisely express API constraints.
-
-    E.g. Java's \texttt{Scanner} cannot be used after being closed.
-
-    Typestates enforce this at compile-time, rather than at runtime.
-
-    \note{
-        \begin{pt}
-            \footnotesize
-            Após esta apresentação de alto nível de typestates, o que afinal são typestates?
 
             Typestates são uma abordagem a tipos comportamentais.
             Estes visam descrever o estado em runtime do programa através do sistema de tipos.
 
             Podem ser modelados como máquinas de estados e permitem ao programador expressar de forma clara e consisa restrições de uso de uma API.
-
-            Por exemplo: o famoso \texttt{Scanner} de Java, não pode ser usado depois de ser fechado, no entanto, o compilador não avisa se tal acontecer.
-            Só durante o runtime é que uma excepção será lançada.
-
-            Os typestates permitem que o compilador valide este tipo de restrições.
         \end{pt}
     }
 \end{frame}
+
+% % \subsection{What are typestates?}
+% \begin{frame}
+%     \frametitle{What are typestates?}
+%     Typestates are an approach to behavioral types that allow the developer to cleanly and concisely express API constraints.
+
+
+%     \note{
+%         \begin{pt}
+%             \footnotesize
+%             Após esta apresentação de alto nível de typestates, o que afinal são typestates?
+
+%             Typestates são uma abordagem a tipos comportamentais.
+%             Estes visam descrever o estado em runtime do programa através do sistema de tipos.
+
+%             Podem ser modelados como máquinas de estados e permitem ao programador expressar de forma clara e consisa restrições de uso de uma API.
+
+%             Por exemplo: o famoso \texttt{Scanner} de Java, não pode ser usado depois de ser fechado, no entanto, o compilador não avisa se tal acontecer.
+%             Só durante o runtime é que uma excepção será lançada.
+
+%             Os typestates permitem que o compilador valide este tipo de restrições.
+%         \end{pt}
+%     }
+% \end{frame}
 
 \section{State of the Art}
 \note{
@@ -297,87 +321,34 @@
 \end{frame}
 
 \begin{frame}
-    \frametitle{Session Types --- Session Types for Rust}
-    The first work with session types and Rust.
+    \frametitle{Session Types --- Session Types \& Rust}
+    % The first work with session types and Rust.
 
-    Exploits the type system to provide binary session types checked at compile-time.
+    % Exploits the type system to provide binary session types checked at compile-time.
 
-    The library makes use of \texttt{unsafe} features.
+    % The library makes use of \texttt{unsafe} features.
 
-    \note{
-        \begin{pt}
-            (Tanto quanto sei) Esta biblioteca foi a primeira a trazer session types para Rust.
-
-            Tira partido do sistema de tipos para validar as especificações de session types.
-
-            Dado que usa \texttt{unsafe} pode não ser adequada para todos os casos de usos.
-        \end{pt}
-    }
-\end{frame}
-
-\begin{frame}
-    \frametitle{Session Types --- Multiparty Session Types for Rust}
-    This work is closer to StMungo in that it also makes use of Scribble to describe session types.
-
-    In comparison to the previous slide, this tool:
-    \begin{itemize}
-        \item Makes use of the Rust type system to provide compile-time safety.
-        \item Allows for multiparty session types.
-        \item Requires an external tool.
-    \end{itemize}
+    \begin{table}
+        \centering
+        \begin{tabular}{l|l|l|l}
+                                & Kind       & Compile-Time & Ext. Tool  \\
+            \hline
+            Jespersen et al.    & Binary     & \checkmark   &            \\
+            \hline
+            Lagaillardie et al. & Multiparty & \checkmark   & \checkmark
+        \end{tabular}
+    \end{table}
 
     \note{
         \begin{pt}
-            Esta ferramenta é um pouco como o StMungo para Rust.
-            Tira partido do Scribble para descrever session types e em comparação com a biblioteca apresentada no slide anterior:
-            \begin{itemize}
-                \item Faz uso do sistema de tipos para garantir segurança em tempo de compilação.
-                \item Permite o uso de multiparty session types.
-                \item Requer, no entanto, uma ferramenta externa.
-            \end{itemize}
+            (Tanto quanto sei) O trabalho de Jespersen et al. foi o primeiro a introduzir session types em Rust,
+            entre esse e o seu principal sucessor as diferenças residem no suporte de multiparty session types e o uso ferramentas externas.
+            Ambos válidos para o seu sucessor Lagaillardie.
         \end{pt}
     }
 \end{frame}
-
-% \begin{frame}
-%     \frametitle{Session Types - Ferrite}
-
-% \end{frame}
-
-% \begin{frame}
-%     \frametitle{Session Types - Dialetic}
-
-% \end{frame}
 
 \subsection{Typestates}
-
-\begin{frame}[fragile]
-    \frametitle{Typestates --- Fugue}
-    \begin{listing}
-        \centering
-        \begin{minted}{csharp}
-[WithProtocol("open", "closed")]
-class OuterSocket {
-    [InState("connected",
-        WhenEnclosingState="open"),
-     NotAliased(WhenEnclosingState="open")]
-    [Unavailable(WhenEnclosingState="closed")]
-    private Socket innerSocket;
-}
-        \end{minted}
-    \end{listing}
-
-    \note{
-        \begin{pt}
-            Seguindo então para os typestates, começo com o Fugue.
-            Um projeto vindo da Microsoft, onde o meu trabalho se inspira.
-
-            O Fugue permite a descrição de estados e transições através de anotações.
-
-            Permite ainda a ligação entre sub-estados para garantir o bom uso das APIs.
-        \end{pt}
-    }
-\end{frame}
 
 \begin{frame}
     \frametitle{Typestates --- Plaid}
@@ -410,13 +381,50 @@ class OuterSocket {
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Typestates --- Mungo}
+    \frametitle{Typestates --- Fugue}
+    \begin{listing}
+        \centering
+        \begin{minted}{csharp}
+[WithProtocol("open", "closed")]
+class OuterSocket {
+    [InState("connected",
+        WhenEnclosingState="open"),
+     NotAliased(WhenEnclosingState="open")]
+    [Unavailable(WhenEnclosingState="closed")]
+    private Socket innerSocket;
+}
+        \end{minted}
+    \end{listing}
 
+    \note{
+        \begin{pt}
+            Seguindo então para os typestates, começo com o Fugue.
+            Um projeto vindo da Microsoft, onde o meu trabalho se inspira.
+
+            O Fugue permite a descrição de estados e transições através de anotações.
+
+            Permite ainda a ligação entre sub-estados para garantir o bom uso das APIs.
+        \end{pt}
+    }
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Typestates --- Mungo}
     \begin{listing}
         \centering
         \begin{minted}{java}
-@Typestate("StateIteratorProtocol")
-class StateIterator { /* ... */ }
+@Typestate("SocketProtocol")
+class Socket { /* ... */ }
+        \end{minted}
+    \end{listing}
+    \begin{listing}
+        \centering
+        \begin{minted}{java}
+typestate Socket {
+    Init  = { Status open(): <OK: Open, ERROR: end> }
+    Open  = { void read(): <OK: Open> }
+    Close = { void close(): end }
+}
         \end{minted}
     \end{listing}
 
@@ -436,17 +444,14 @@ class StateIterator { /* ... */ }
 \note{
     \begin{pt}
         Irei agora apresentar o caso de estudo para apresentar a biblioteca.
-        Começo com o problema geral e a sua solução.
+        Começo pela solução ao problema apresentado.
         Irei rever ainda a abordagem ao problema e por fim, o workflow,
         onde irei apresentar um problema concreto e apresentar passo a passo como usar a biblioteca para o resolver.
     \end{pt}
 }
 
-\subsection{Problem}
 \begin{frame}[fragile]
     \frametitle{Problem} % ???
-    Error happens at runtime, possibly crashing the program.
-
     \begin{minted}{Rust}
 fn main() {
     let protocol = Protocol::new();
@@ -455,15 +460,9 @@ fn main() {
     protocol.step2();
 }
     \end{minted}
-    Our tools should work for us, not make us work for them.
-
     \note{
         \begin{pt}
-            Como discutido na introdução, queremos diminuir os bugs.
-            No entanto, os bugs que queremos endereçar são principalmente maus usos das APIs.
-
-            Como na figura, o programa iria lançar um panico.
-            Enquanto programadores, queremos que a máquina trabalhe por nós, não ao contrário.
+            Para relembrar, o problema é o compilador não avisar que aquela chamada está fora de ordem.
         \end{pt}
     }
 \end{frame}
@@ -520,68 +519,70 @@ fn main() {
     }
 \end{frame}
 
-\begin{frame}[fragile]
+\begin{frame}<1-5>[fragile]
     \frametitle{Approach --- Going deeper}
     \setmintedinline[rust]{fontsize=\tiny}
-    \begin{figure}
-        \centering
-        \begin{tikzpicture}
-            \tikzstyle{Code} = [align=left]
-            \tikzstyle{Text} = [align=center, font=\small, fill=none]
-            \tikzstyle{Conn} = [above, align=center, font=\itshape\scriptsize, fill=none]
-            \tikzstyle{Node} = [circle, draw=blue!70, fill=blue!30, minimum size=0.1cm]
-            \tikzstyle{FSMS} = [circle, draw=green!70, fill=green!30, minimum size=0.1cm]
-            \tikzstyle{FSME} = [circle, draw=red!70, fill=red!30, minimum size=0.1cm]
-            \node[Text] (ts-spec) at (0, 4) {Typestate\\Specification};
-            \node[Text] (ts-ast)  at (3, 4) {AST};
-            \node[Text] (ts-fsm)  at (6, 4) {State\\Machine};
-            \node[Text] (ts-code) at (9, 4) {Rust\\Code};
+    % \begin{overprint}
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \tikzstyle{Code} = [align=left]
+                \tikzstyle{Text} = [align=center, font=\small, fill=none]
+                \tikzstyle{Conn} = [above, align=center, font=\itshape\scriptsize, fill=none]
+                \tikzstyle{Node} = [circle, draw=blue!70, fill=blue!30, minimum size=0.1cm]
+                \tikzstyle{FSMS} = [circle, draw=green!70, fill=green!30, minimum size=0.1cm]
+                \tikzstyle{FSME} = [circle, draw=red!70, fill=red!30, minimum size=0.1cm]
+                \node[Text, bold on=<2>] (ts-spec) at (0, 4) {Typestate\\Specification};
+                \node[Text, bold on=<3>] (ts-ast)  at (3, 4) {AST};
+                \node[Text, bold on=<4>] (ts-fsm)  at (6, 4) {State\\Machine};
+                \node[Text, bold on=<5>] (ts-code) at (9, 4) {Rust\\Code};
 
-            \draw[->] (ts-spec) -- node[Conn] {Parse} (ts-ast);
-            \draw[->] (ts-ast)  -- node[Conn] {Convert} (ts-fsm);
-            \draw[->] (ts-fsm)  -- node[Conn] {Check: Ok} (ts-code);
-            \draw[->] (ts-fsm)  edge[in=35, out=145] node[Conn] {Check: Error} (ts-spec);
+                \draw[->] (ts-spec) -- node[Conn] {Parse} (ts-ast);
+                \draw[->] (ts-ast)  -- node[Conn] {Convert} (ts-fsm);
+                \draw[->] (ts-fsm)  -- node[Conn] {Check: Ok} (ts-code);
+                \draw[->] (ts-fsm)  edge[in=35, out=145] node[Conn] {Check: Error} (ts-spec);
 
-            \begin{scope}[shift={(0, 2)}]
-                \node[Code] (ts-spec-code) at (0,0) {\mintinline{rust}{#[typestate]}\\\mintinline{rust}{// ...}};
-            \end{scope}
+                \begin{scope}[shift={(0, 2)}]
+                    \node[Code] (ts-spec-code) at (0,0) {\mintinline{rust}{#[typestate]}\\\mintinline{rust}{// ...}};
+                \end{scope}
 
-            \begin{scope}[shift={(3, 1)}]
-                \node[Node] (n0) at (0, 2) {};
-                \node[Node] (n1) at (-0.5, 1) {};
-                \node[Node] (n2) at (0.5, 1) {};
-                \node[Node] (n3) at (0, 0) {};
-                \node[Node] (n4) at (1, 0) {};
-                \draw[-] (n0) -- (n1);
-                \draw[-] (n0) -- (n2);
-                \draw[-] (n2) -- (n3);
-                \draw[-] (n2) -- (n4);
-            \end{scope}
+                \begin{scope}[shift={(3, 1)}]
+                    \node[Node] (n0) at (0, 2) {};
+                    \node[Node] (n1) at (-0.5, 1) {};
+                    \node[Node] (n2) at (0.5, 1) {};
+                    \node[Node] (n3) at (0, 0) {};
+                    \node[Node] (n4) at (1, 0) {};
+                    \draw[-] (n0) -- (n1);
+                    \draw[-] (n0) -- (n2);
+                    \draw[-] (n2) -- (n3);
+                    \draw[-] (n2) -- (n4);
+                \end{scope}
 
-            \begin{scope}[shift={(6, 1)}]
-                \node[FSMS] (n0) at (0, 2) {};
-                \node[Node] (n1) at (-0.5, 1) {};
-                \node[Node] (n2) at (0.5, 1) {};
-                \node[FSME] (n3) at (0, 0) {};
-                \draw[->] (n0) -- (n1);
-                \draw[->] (n0) -- (n2);
-                \draw[->] (n1) -- (n2);
-                \draw[->] (n2) -- (n3);
-            \end{scope}
+                \begin{scope}[shift={(6, 1)}]
+                    \node[FSMS] (n0) at (0, 2) {};
+                    \node[Node] (n1) at (-0.5, 1) {};
+                    \node[Node] (n2) at (0.5, 1) {};
+                    \node[FSME] (n3) at (0, 0) {};
+                    \draw[->] (n0) -- (n1);
+                    \draw[->] (n0) -- (n2);
+                    \draw[->] (n1) -- (n2);
+                    \draw[->] (n2) -- (n3);
+                \end{scope}
 
-            \begin{scope}[shift={(9, 2)}]
-                \node[Code] (ts-spec-code) at (0,0) {
-                    \mintinline{rust}{struct S { ... }}\\
-                    \mintinline{rust}{trait SOps { ... }}\\
-                    \mintinline{rust}{// ...}
-                };
-            \end{scope}
+                \begin{scope}[shift={(9, 2)}]
+                    \node[Code] (ts-spec-code) at (0,0) {
+                        \mintinline{rust}{struct S { ... }}\\
+                        \mintinline{rust}{trait SOps { ... }}\\
+                        \mintinline{rust}{// ...}
+                    };
+                \end{scope}
 
-            \draw[dashed] (1.5, 1) -- (1.5, 3);
-            \draw[dashed] (4.5, 1) -- (4.5, 3);
-            \draw[dashed] (7.5, 1) -- (7.5, 3);
-        \end{tikzpicture}
-    \end{figure}
+                \draw[dashed] (1.5, 1) -- (1.5, 3);
+                \draw[dashed] (4.5, 1) -- (4.5, 3);
+                \draw[dashed] (7.5, 1) -- (7.5, 3);
+            \end{tikzpicture}
+        \end{figure}
+    % \end{overprint}
 
     \note{
         \begin{pt}
@@ -677,12 +678,18 @@ fn main() {
     \frametitle{Workflow --- Declaring \emph{start} and \emph{end} states in Rust}
     Functions that do not use \texttt{self} and \emph{return} a valid state are inferred as the \emph{start} state.
 
-    Functions that take \texttt{self} and do \emph{not return }a valid state are inferred as the \emph{end} state.
     \begin{listing}
         \centering
         \begin{minted}{rust}
     // code from the previous slides ...
     fn turn_on() -> Red;
+        \end{minted}
+    \end{listing}
+
+    Functions that take \texttt{self} and do \emph{not return }a valid state are inferred as the \emph{end} state.
+    \begin{listing}
+        \centering
+        \begin{minted}{rust}
     fn turn_off(self: Red);
 }
         \end{minted}
@@ -702,14 +709,13 @@ fn main() {
 
 \begin{frame}[fragile]
     \frametitle{Workflow --- The other features}
-    There are still other important features left.
-    For maintenance purposed, consider that our traffic light is now required to count every \texttt{GYR} cycle. % Green->Yellow->Red
+    For maintenance purposes, consider that our traffic light is now required to count every \texttt{GYR} cycle. % Green->Yellow->Red
 
     The \texttt{TrafficLight} structure is now declared as follows:
     \begin{listing}
         \centering
         \begin{minted}{rust}
-#[automata] struct TrafficLight { cycles:u64 }
+#[automata] struct TrafficLight { cycles: u64 }
         \end{minted}
     \end{listing}
 
@@ -732,9 +738,7 @@ fn main() {
     \begin{listing}
         \centering
         \begin{minted}{rust}
-fn requires_maintenance(
-    &self: TrafficLight
-) -> bool;
+fn requires_maintenance(self: &TrafficLight) -> bool;
         \end{minted}
     \end{listing}
     This function is not able to perform mutations due to the immutable reference (\texttt{\&}).
@@ -759,7 +763,7 @@ fn requires_maintenance(
 fn reset_counter(self: &mut TrafficLight);
         \end{minted}
     \end{listing}
-    The function is able to perform mutations, due to usage of a mutable reference (\texttt{\&mut}),
+    The function is able to perform mutations over fields, due to usage of a mutable reference (\texttt{\&mut}),
     but it is unable to transition between states.
 
     \note{
@@ -772,12 +776,14 @@ fn reset_counter(self: &mut TrafficLight);
 
 \begin{frame}[fragile]
     \frametitle{Workflow --- Final steps}
-    Finally, the developer is only required to implement the state transitions.
+    After the code is checked and expanded, all that is left is for the user to implement the state transitions.
     \begin{listing}
         \centering
         \begin{minted}{rust}
 impl GreenState for TrafficLight<Green> {
-    fn to_yellow(self) -> TrafficLight<Yellow> { /* ... */ }
+    fn to_yellow(self) -> TrafficLight<Yellow> {
+        /* ... */
+    }
 }
         \end{minted}
     \end{listing}
@@ -795,7 +801,82 @@ impl GreenState for TrafficLight<Green> {
     The final user API would look like the following:
     \begin{listing}
         \centering
-        \begin{minted}{rust}
+        \begin{minted}[highlightlines=1,highlightcolor=blue!10]{rust}
+let tl = TrafficLight<Red>::turn_on();
+let green = tl.to_green();
+if green.requires_maintenance() {
+    // ...
+    green.reset();
+}
+green.to_red(); // compile-time error
+        \end{minted}
+    \end{listing}
+
+    \note{
+        \begin{pt}
+            A API apresentada ao utilizador final seria a seguinte.
+
+            O erro é apanhado pelo compilador, devido a um "type mismatch".
+        \end{pt}
+    }
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Workflow --- Usage}
+    The final user API would look like the following:
+    \begin{listing}
+        \centering
+        \begin{minted}[highlightlines=2,highlightcolor=blue!10]{rust}
+let tl = TrafficLight<Red>::turn_on();
+let green = tl.to_green();
+if green.requires_maintenance() {
+    // ...
+    green.reset();
+}
+green.to_red(); // compile-time error
+        \end{minted}
+    \end{listing}
+
+    \note{
+        \begin{pt}
+            A API apresentada ao utilizador final seria a seguinte.
+
+            O erro é apanhado pelo compilador, devido a um "type mismatch".
+        \end{pt}
+    }
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Workflow --- Usage}
+    The final user API would look like the following:
+    \begin{listing}
+        \centering
+        \begin{minted}[highlightlines=3-6,highlightcolor=blue!10]{rust}
+let tl = TrafficLight<Red>::turn_on();
+let green = tl.to_green();
+if green.requires_maintenance() {
+    // ...
+    green.reset();
+}
+green.to_red(); // compile-time error
+        \end{minted}
+    \end{listing}
+
+    \note{
+        \begin{pt}
+            A API apresentada ao utilizador final seria a seguinte.
+
+            O erro é apanhado pelo compilador, devido a um "type mismatch".
+        \end{pt}
+    }
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Workflow --- Usage}
+    The final user API would look like the following:
+    \begin{listing}
+        \centering
+        \begin{minted}[highlightlines=7,highlightcolor=red!10]{rust}
 let tl = TrafficLight<Red>::turn_on();
 let green = tl.to_green();
 if green.requires_maintenance() {
