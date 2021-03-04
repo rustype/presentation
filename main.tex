@@ -207,15 +207,16 @@
 \begin{frame}[fragile]
     \frametitle{Problem} % ???
     Error happens at runtime, possibly crashing the program.
-
-    \begin{minted}{Rust}
+    \begin{listing}
+        \centering
+        \begin{minted}{Rust}
 fn main() {
-    let protocol = Protocol::new();
-    protocol.step1();
-    protocol.step3(); // runtime error
-    protocol.step2();
+    let builder = CoordinateBuilder::new();
+    builder.setX(0.0);
+    builder.build(); // runtime error: missing `y`
 }
-    \end{minted}
+        \end{minted}
+    \end{listing}
     Our tools should work for us, not make us work for them.
 
     \note{
@@ -232,6 +233,23 @@ fn main() {
 \end{frame}
 
 \subsection{Objectives}
+
+\begin{frame}
+    \frametitle{What are typestates?}
+
+    Typestates are an approach to behavioral types that allow the developer to cleanly and concisely express API constraints.
+
+    \note{
+        \begin{pt}
+            Typestates são uma abordagem a tipos comportamentais.
+            Estes visam descrever o estado em runtime do programa através do sistema de tipos.
+
+            Podem ser modelados como máquinas de estados e permitem ao programador expressar de forma clara e consisa restrições de uso de uma API.
+        \end{pt}
+    }
+\end{frame}
+
+
 \begin{frame}
     \frametitle{Objectives}
     A library which brings \emph{practical} typestates to Rust.
@@ -241,7 +259,6 @@ fn main() {
         \item Scalable to large projects.
     \end{itemize}
 
-    Typestates are an approach to behavioral types that allow the developer to cleanly and concisely express API constraints.
 
     \note{
         \begin{pt}
@@ -253,63 +270,64 @@ fn main() {
                 \item Não devem impactar a performance durante o runtime.
                 \item Devem escalar a projetos grandes.
             \end{itemize}
-
-            Typestates são uma abordagem a tipos comportamentais.
-            Estes visam descrever o estado em runtime do programa através do sistema de tipos.
-
-            Podem ser modelados como máquinas de estados e permitem ao programador expressar de forma clara e consisa restrições de uso de uma API.
         \end{pt}
     }
 \end{frame}
 
-% % \subsection{What are typestates?}
-% \begin{frame}
-%     \frametitle{What are typestates?}
-%     Typestates are an approach to behavioral types that allow the developer to cleanly and concisely express API constraints.
-
-
-%     \note{
-%         \begin{pt}
-%             \footnotesize
-%             Após esta apresentação de alto nível de typestates, o que afinal são typestates?
-
-%             Typestates são uma abordagem a tipos comportamentais.
-%             Estes visam descrever o estado em runtime do programa através do sistema de tipos.
-
-%             Podem ser modelados como máquinas de estados e permitem ao programador expressar de forma clara e consisa restrições de uso de uma API.
-
-%             Por exemplo: o famoso \texttt{Scanner} de Java, não pode ser usado depois de ser fechado, no entanto, o compilador não avisa se tal acontecer.
-%             Só durante o runtime é que uma excepção será lançada.
-
-%             Os typestates permitem que o compilador valide este tipo de restrições.
-%         \end{pt}
-%     }
-% \end{frame}
-
 \section{State of the Art}
 \note{
     \begin{pt}
-        Irei agora efectuar uma breve revisão do estado da arte e de outros projetos existentes.
-        Começando por session types e seguindo para typestates.
+        Devido a restrições de tempo vou cingir-me a implementações de tipos comportamentais para linguagens
+        de alto nível em linha com a minha abordagem.
     \end{pt}
 }
 \subsection{Session Types}
-\begin{frame}
+\begin{frame}[fragile]
     \frametitle{Session Types --- StMungo}
     StMungo is a tool that converts Scribble local protocols into a Mungo typestate specification and Java skeleton.
-    \begin{figure}
-        \centering
-        \begin{tikzpicture}
-            \node (scribble) at (0,  0) {Scribble};
-            \node (java)     at (4,  1.25) {Java};
-            \node (mungo)    at (4, -1.25) {Mungo};
 
-            \draw[->, thick] (scribble) edge[out=0, in=180] (java);
-            \draw[->, thick] (scribble) edge[out=0, in=180] (mungo);
-            \draw[->, thick, dashed] (mungo) -- node[right, font=\scriptsize\itshape] {Checks} (java);
-        \end{tikzpicture}
-    \end{figure}
-    Scribble further enables the conversion of multiparty session types into binary session types.
+    \begin{minipage}{0.3\linewidth}
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \node (scribble) at (0,  0) {Scribble};
+                \node (java)     at (2.25,  1.25) {Java};
+                \node (mungo)    at (2.25, -1.25) {Mungo};
+
+                \draw[->, thick] (scribble) edge[out=0, in=180] (java);
+                \draw[->, thick] (scribble) edge[out=0, in=180] (mungo);
+                \draw[->, thick, dashed] (mungo) -- node[right, font=\scriptsize\itshape] {Checks} (java);
+            \end{tikzpicture}
+        \end{figure}
+    \end{minipage}\hfill%
+    \begin{minipage}{0.33\linewidth}
+        \begin{listing}
+            \centering
+            \begin{minted}[fontsize=\tiny, linenos=false]{text}
+module example;
+
+type <xsd> "..."
+    from "..." as Hello;
+
+global protocol P(role A, role B) {
+    connect(Hello) from A to B;
+}
+            \end{minted}
+        \end{listing}
+    \end{minipage}\hfill%
+    \begin{minipage}{0.25\linewidth}
+        \begin{listing}
+            \centering
+            \begin{minted}[fontsize=\tiny, linenos=false]{java}
+typestate Protocol {
+    Init  =
+        { /* ... */ }
+    Close =
+        { /* ... */ }
+}
+            \end{minted}
+        \end{listing}
+    \end{minipage}
     \note{
         \begin{pt}
             O StMungo (ou Scribble to Mungo) é uma ferramenta que converte protocolos de Scribble para especificações de typestates em Mungo e esqueletos de API em Java.
@@ -374,8 +392,6 @@ fn main() {
 
             A outra caracteristica mais relevante da linguagem é o seu controlo de aliasing,
             efetuado através de palavras-chave, como descrito na tabela.
-
-            (Descrever tabela.)
         \end{pt}
     }
 \end{frame}
@@ -443,23 +459,22 @@ typestate Socket {
 
 \note{
     \begin{pt}
-        Irei agora apresentar o caso de estudo para apresentar a biblioteca.
-        Começo pela solução ao problema apresentado.
-        Irei rever ainda a abordagem ao problema e por fim, o workflow,
-        onde irei apresentar um problema concreto e apresentar passo a passo como usar a biblioteca para o resolver.
+        Apresento agora o caso de estudo de acordo com a seguinte estrutura.
     \end{pt}
 }
 
 \begin{frame}[fragile]
     \frametitle{Problem} % ???
-    \begin{minted}{Rust}
+    \begin{listing}
+        \centering
+        \begin{minted}{Rust}
 fn main() {
-    let protocol = Protocol::new();
-    protocol.step1();
-    protocol.step3(); // runtime error
-    protocol.step2();
+    let builder = CoordinateBuilder::new();
+    builder.setX(0.0);
+    builder.build(); // runtime error: missing `y`
 }
-    \end{minted}
+        \end{minted}
+    \end{listing}
     \note{
         \begin{pt}
             Para relembrar, o problema é o compilador não avisar que aquela chamada está fora de ordem.
@@ -473,17 +488,19 @@ fn main() {
     Ideally, we want to catch the error at compile-time.
     \begin{listing}
         \centering
-        \begin{minted}{text}
+        \begin{minted}{Rust}
 fn main() {
-    let protocol = Protocol::new();
-    protocol.step1();
-    protocol.step3();
-             ^^^^^^^
-             | error: cannot call `step3`
-    protocol.step2();
+    let builder = CoordinateBuilder::new();
+    builder.setX(0.0);
+    builder.build();
+         // ^^^^^
+         // | error: you cannot build without setting `y`
 }
         \end{minted}
     \end{listing}
+
+    \emph{How?}
+    \only<2>{Declare the protocol.}
 
     \note{
         \begin{pt}
@@ -497,24 +514,27 @@ fn main() {
 \begin{frame}
     \frametitle{Approach --- Overview}
 
-    \emph{We can exploit the Rust typesystem to emulate typestates,
-        however this approach requires boilerplate.}
+    \emph{\textbf{We can exploit the Rust typesystem to emulate typestates.}}
 
-    Use macros!
-    \begin{itemize}
-        \item Rewrite the annotated code, generating boilerplate for the user.
-        \item Able to throw errors during compile-time.
-        \item Part of the language, requiring no new experience.
-    \end{itemize}
+    \begin{overprint}
+        \onslide<2->{However this approach requires boilerplate.}
+
+        \onslide<3->{Use macros! Part of the language, requiring no new experience.}
+        \begin{itemize}
+            \item<4-> Rewrite the annotated code, generating boilerplate for the user.
+            \item<5-> Throw errors during compile-time.
+        \end{itemize}
+    \end{overprint}
 
     \note{
         \begin{pt}
             Usando o sistema de tipos de Rust, podemos emular typestates.
             No entanto, esta abordagem requer muito boilerplate.
 
+            Esta abordagem não requer um esforço especial por parte do utilizador, visto que os macros são um elemento comum da linguagem.
+
             Usando macros, podemos gerar o código por nós.
             Podemos ainda validar o código contra outras propriedades e lançar erros durante a compilação.
-            Esta abordagem não requer um esforço especial por parte do utilizador, visto que os macros são um elemento comum da linguagem.
         \end{pt}
     }
 \end{frame}
@@ -523,65 +543,65 @@ fn main() {
     \frametitle{Approach --- Going deeper}
     \setmintedinline[rust]{fontsize=\tiny}
     % \begin{overprint}
-        \begin{figure}
-            \centering
-            \begin{tikzpicture}
-                \tikzstyle{Code} = [align=left]
-                \tikzstyle{Text} = [align=center, font=\small, fill=none]
-                \tikzstyle{Conn} = [above, align=center, font=\itshape\scriptsize, fill=none]
-                \tikzstyle{Node} = [circle, draw=blue!70, fill=blue!30, minimum size=0.1cm]
-                \tikzstyle{FSMS} = [circle, draw=green!70, fill=green!30, minimum size=0.1cm]
-                \tikzstyle{FSME} = [circle, draw=red!70, fill=red!30, minimum size=0.1cm]
-                \node[Text, bold on=<2>] (ts-spec) at (0, 4) {Typestate\\Specification};
-                \node[Text, bold on=<3>] (ts-ast)  at (3, 4) {AST};
-                \node[Text, bold on=<4>] (ts-fsm)  at (6, 4) {State\\Machine};
-                \node[Text, bold on=<5>] (ts-code) at (9, 4) {Rust\\Code};
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \tikzstyle{Code} = [align=left]
+            \tikzstyle{Text} = [align=center, font=\small, fill=none]
+            \tikzstyle{Conn} = [above, align=center, font=\itshape\scriptsize, fill=none]
+            \tikzstyle{Node} = [circle, draw=blue!70, fill=blue!30, minimum size=0.1cm]
+            \tikzstyle{FSMS} = [circle, draw=green!70, fill=green!30, minimum size=0.1cm]
+            \tikzstyle{FSME} = [circle, draw=red!70, fill=red!30, minimum size=0.1cm]
+            \node[Text, bold on=<2>] (ts-spec) at (0, 4) {Typestate\\Specification};
+            \node[Text, bold on=<3>] (ts-ast)  at (3, 4) {AST};
+            \node[Text, bold on=<4>] (ts-fsm)  at (6, 4) {State\\Machine};
+            \node[Text, bold on=<5>] (ts-code) at (9, 4) {Rust\\Code};
 
-                \draw[->] (ts-spec) -- node[Conn] {Parse} (ts-ast);
-                \draw[->] (ts-ast)  -- node[Conn] {Convert} (ts-fsm);
-                \draw[->] (ts-fsm)  -- node[Conn] {Check: Ok} (ts-code);
-                \draw[->] (ts-fsm)  edge[in=35, out=145] node[Conn] {Check: Error} (ts-spec);
+            \draw[->] (ts-spec) -- node[Conn] {Parse} (ts-ast);
+            \draw[->] (ts-ast)  -- node[Conn] {Convert} (ts-fsm);
+            \draw[->] (ts-fsm)  -- node[Conn] {Check: Ok} (ts-code);
+            \draw[->] (ts-fsm)  edge[in=35, out=145] node[Conn] {Check: Error} (ts-spec);
 
-                \begin{scope}[shift={(0, 2)}]
-                    \node[Code] (ts-spec-code) at (0,0) {\mintinline{rust}{#[typestate]}\\\mintinline{rust}{// ...}};
-                \end{scope}
+            \begin{scope}[shift={(0, 2)}]
+                \node[Code] (ts-spec-code) at (0,0) {\mintinline{rust}{#[typestate]}\\\mintinline{rust}{// ...}};
+            \end{scope}
 
-                \begin{scope}[shift={(3, 1)}]
-                    \node[Node] (n0) at (0, 2) {};
-                    \node[Node] (n1) at (-0.5, 1) {};
-                    \node[Node] (n2) at (0.5, 1) {};
-                    \node[Node] (n3) at (0, 0) {};
-                    \node[Node] (n4) at (1, 0) {};
-                    \draw[-] (n0) -- (n1);
-                    \draw[-] (n0) -- (n2);
-                    \draw[-] (n2) -- (n3);
-                    \draw[-] (n2) -- (n4);
-                \end{scope}
+            \begin{scope}[shift={(3, 1)}]
+                \node[Node] (n0) at (0, 2) {};
+                \node[Node] (n1) at (-0.5, 1) {};
+                \node[Node] (n2) at (0.5, 1) {};
+                \node[Node] (n3) at (0, 0) {};
+                \node[Node] (n4) at (1, 0) {};
+                \draw[-] (n0) -- (n1);
+                \draw[-] (n0) -- (n2);
+                \draw[-] (n2) -- (n3);
+                \draw[-] (n2) -- (n4);
+            \end{scope}
 
-                \begin{scope}[shift={(6, 1)}]
-                    \node[FSMS] (n0) at (0, 2) {};
-                    \node[Node] (n1) at (-0.5, 1) {};
-                    \node[Node] (n2) at (0.5, 1) {};
-                    \node[FSME] (n3) at (0, 0) {};
-                    \draw[->] (n0) -- (n1);
-                    \draw[->] (n0) -- (n2);
-                    \draw[->] (n1) -- (n2);
-                    \draw[->] (n2) -- (n3);
-                \end{scope}
+            \begin{scope}[shift={(6, 1)}]
+                \node[FSMS] (n0) at (0, 2) {};
+                \node[Node] (n1) at (-0.5, 1) {};
+                \node[Node] (n2) at (0.5, 1) {};
+                \node[FSME] (n3) at (0, 0) {};
+                \draw[->] (n0) -- (n1);
+                \draw[->] (n0) -- (n2);
+                \draw[->] (n1) -- (n2);
+                \draw[->] (n2) -- (n3);
+            \end{scope}
 
-                \begin{scope}[shift={(9, 2)}]
-                    \node[Code] (ts-spec-code) at (0,0) {
-                        \mintinline{rust}{struct S { ... }}\\
-                        \mintinline{rust}{trait SOps { ... }}\\
-                        \mintinline{rust}{// ...}
-                    };
-                \end{scope}
+            \begin{scope}[shift={(9, 2)}]
+                \node[Code] (ts-spec-code) at (0,0) {
+                    \mintinline{rust}{struct S { ... }}\\
+                    \mintinline{rust}{trait SOps { ... }}\\
+                    \mintinline{rust}{// ...}
+                };
+            \end{scope}
 
-                \draw[dashed] (1.5, 1) -- (1.5, 3);
-                \draw[dashed] (4.5, 1) -- (4.5, 3);
-                \draw[dashed] (7.5, 1) -- (7.5, 3);
-            \end{tikzpicture}
-        \end{figure}
+            \draw[dashed] (1.5, 1) -- (1.5, 3);
+            \draw[dashed] (4.5, 1) -- (4.5, 3);
+            \draw[dashed] (7.5, 1) -- (7.5, 3);
+        \end{tikzpicture}
+    \end{figure}
     % \end{overprint}
 
     \note{
@@ -619,7 +639,7 @@ fn main() {
 
     \note{
         \begin{pt}
-            Seguindo para o modo de trabalho, consideremos um semáforo.
+            Consideremos um semáforo.
             Ele percorre um ciclo, verde, amarelo, vermelho e o mesmo pode ser ligado e desligado.
 
             Vamos então modelá-lo com a biblioteca.
@@ -675,7 +695,7 @@ fn main() {
 \end{frame}
 
 \begin{frame}[fragile]
-    \frametitle{Workflow --- Declaring \emph{start} and \emph{end} states in Rust}
+    \frametitle{Workflow --- Declaring \emph{start} states in Rust}
     Functions that do not use \texttt{self} and \emph{return} a valid state are inferred as the \emph{start} state.
 
     \begin{listing}
@@ -685,6 +705,20 @@ fn main() {
     fn turn_on() -> Red;
         \end{minted}
     \end{listing}
+
+    \note{
+        \begin{pt}
+            Por fim, o estado inicial e final, que neste caso é o mesmo.
+
+            Funções que não consomem o estado atual e retornam um estado são consideradas declarações de estados iniciais.
+
+            Funções que consomem o estado atual e não retornam um estado são consideradas declarações de estados finais.
+        \end{pt}
+    }
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Workflow --- Declaring \emph{end} states in Rust}
 
     Functions that take \texttt{self} and do \emph{not return }a valid state are inferred as the \emph{end} state.
     \begin{listing}
