@@ -70,12 +70,7 @@
 
 \note{
     \begin{pt}
-        Relativamente à introdução irei:
-        \begin{itemize}
-            \item Contextualizar o tema da tese.
-            \item Apresentar o problema que a mesma visa endereçar.
-            \item Os objetivos da tese.
-        \end{itemize}
+        A introdução segue a seguinte estrutura.
     \end{pt}
 }
 
@@ -211,7 +206,7 @@
         \centering
         \begin{minted}{Rust}
 fn main() {
-    let builder = CoordinateBuilder::new();
+    let builder = XYBuilder::new();
     builder.setX(0.0);
     builder.build(); // runtime error: missing `y`
 }
@@ -267,7 +262,6 @@ fn main() {
             Os mesmos:
             \begin{itemize}
                 \item Devem ser fáceis de aprender e usar.
-                \item Não devem impactar a performance durante o runtime.
                 \item Devem escalar a projetos grandes.
             \end{itemize}
         \end{pt}
@@ -284,7 +278,7 @@ fn main() {
 \subsection{Session Types}
 \begin{frame}[fragile]
     \frametitle{Session Types --- StMungo}
-    StMungo is a tool that converts Scribble local protocols into a Mungo typestate specification and Java skeleton.
+    StMungo is a tool that converts Scribble protocols into a Mungo typestate specification and Java skeleton.
 
     \begin{minipage}{0.3\linewidth}
         \begin{figure}
@@ -469,7 +463,7 @@ typestate Socket {
         \centering
         \begin{minted}{Rust}
 fn main() {
-    let builder = CoordinateBuilder::new();
+    let builder = XYBuilder::new();
     builder.setX(0.0);
     builder.build(); // runtime error: missing `y`
 }
@@ -490,7 +484,7 @@ fn main() {
         \centering
         \begin{minted}{Rust}
 fn main() {
-    let builder = CoordinateBuilder::new();
+    let builder = XYBuilder::new();
     builder.setX(0.0);
     builder.build();
          // ^^^^^
@@ -683,7 +677,6 @@ fn main() {
     // ...
         \end{minted}
     \end{listing}
-    Finally, we need \emph{start} and \emph{end} states.
 
     \note{
         \begin{pt}
