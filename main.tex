@@ -101,11 +101,10 @@
 
 \subsection{Problem}
 \begin{frame}
-    \frametitle{Problem}
+    \frametitle{Problem --- in mainstream languages}
     \begin{figure}
         \centering
         \begin{tikzpicture}
-            \def\Y{3}
             \def\fstcircle{(0, 0) circle (2.5)}
             \def\sndcircle{(0,-1.25) circle (1)}
 
@@ -115,8 +114,9 @@
             \draw \fstcircle;
             \draw \sndcircle;
 
-            \node at (0, \Y) {Preventable};
-            \node at (0, 0.25) {Prevented};
+            \node at (0, 3) {Bugs};
+            \node at (0, 1.25) {Preventable};
+            \node at (0, -1.25) {\scriptsize Prevented};
         \end{tikzpicture}
         \caption{Diagram of preventable bugs and prevented bugs.}
     \end{figure}
@@ -138,7 +138,6 @@
     \begin{figure}
         \centering
         \begin{tikzpicture}
-            \def\Y{3}
             \def\fstcircle{(0,0) circle (2.5)}
             \def\sndcircle{(0,-.75) circle (1.5)}
 
@@ -148,7 +147,8 @@
             \draw \fstcircle;
             \draw \sndcircle;
 
-            \node at (0, \Y) {Preventable};
+            \node at (0, 3) {Bugs};
+            \node at (0, 1.25) {Preventable};
             \node at (0, -.75) {Prevented};
         \end{tikzpicture}
         \caption{Diagram of preventable bugs and prevented bugs when considering Rust's borrow checker.}
@@ -182,8 +182,8 @@
             \draw \fstcircle;
             \draw \sndcircle;
 
-            \node at (\fstX-4, \Y) {Preventable};
-            \node at (\sndX+4, \Y) {Prevented};
+            \node at (0, 3) {Bugs};
+            \node at (0, 0) {Preventable \& Prevented};
         \end{tikzpicture}
         \caption{The ideal diagram of preventable bugs and prevented bugs, where all bugs are prevented.}
     \end{figure}
@@ -219,9 +219,9 @@ fn main() {
             Queremos diminuir os bugs.
             No entanto, os bugs que queremos endereçar são principalmente maus usos das APIs.
 
-            Como na figura, o programa iria lançar um panico.
-            Enquanto programadores, queremos que a máquina trabalhe por nós, não ao contrário.
+            Como na figura, o programa iria lançar um panico porque não inicializei o Y.
 
+            Enquanto programadores, queremos que a máquina trabalhe por nós, não ao contrário.
             Minimizando assim o tempo de debug, e a complexidade associada ao trabalho.
         \end{pt}
     }
@@ -232,7 +232,12 @@ fn main() {
 \begin{frame}
     \frametitle{What are typestates?}
 
-    Typestates are an approach to behavioral types that allow the developer to cleanly and concisely express API constraints.
+    \begin{itemize}
+        \item An approach to behavioral types.
+        \item Allow the developer to cleanly and concisely express API constraints.
+    \end{itemize}
+
+    \emph{e.g. “Do not call \texttt{.next()} before \texttt{.hasNext()}.”}
 
     \note{
         \begin{pt}
@@ -356,6 +361,8 @@ typestate Protocol {
             (Tanto quanto sei) O trabalho de Jespersen et al. foi o primeiro a introduzir session types em Rust,
             entre esse e o seu principal sucessor as diferenças residem no suporte de multiparty session types e o uso ferramentas externas.
             Ambos válidos para o seu sucessor Lagaillardie.
+
+            Os trabalhos apresentados providenciam tipos apenas para canais.
         \end{pt}
     }
 \end{frame}
@@ -420,6 +427,23 @@ class OuterSocket {
 
 \begin{frame}[fragile]
     \frametitle{Typestates --- Mungo}
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \tikzstyle{state} = [circle, thick, minimum size=0.6cm, draw=black!70, font=\scriptsize\ttfamily]
+            \tikzstyle{transition} = [->, thick, draw=black!70]
+            \node[state, label=above:{\scriptsize\ttfamily Init}] (init) at (0, 0) {};
+            \node[state, label=above:{\scriptsize\ttfamily Open}] (open) at (2, 0) {};
+            \node[state, label=above:{\scriptsize\ttfamily Close}] (close) at (4, 0) {};
+            \node[state, label=above:{\scriptsize\ttfamily end}] (end) at (6, 0) {};
+            \node[state, minimum size= 0.45cm] (inner-end) at (6, 0) {};
+            \draw[transition] (init) -- node[above, font=\tiny\ttfamily] {open:OK} (open);
+            \draw[transition] (init) edge[out=-15, in=-165] node[below, font=\tiny\ttfamily] {open:ERROR} (end);
+            \draw[transition] (open) -- node[above, font=\tiny\ttfamily] {read} (close);
+            \draw[transition] (close) -- node[above, font=\tiny\ttfamily] {close} (end);
+        \end{tikzpicture}
+    \end{figure}
+
     \begin{listing}
         \centering
         \begin{minted}{java}
@@ -488,7 +512,7 @@ fn main() {
     builder.setX(0.0);
     builder.build();
          // ^^^^^
-         // | error: you cannot build without setting `y`
+         // | error: you cannot buildlabel without setting `y`
 }
         \end{minted}
     \end{listing}
@@ -619,15 +643,19 @@ fn main() {
     \begin{figure}
         \centering
         \begin{tikzpicture}
-            \node[circle, thick, minimum size=0.75cm, draw=green!70, fill=green!30] (g) at (0, 0) {};
-            \node[circle, thick, minimum size=0.75cm, draw=yellow, fill=yellow!50] (y) at (4, 0) {};
-            \node[circle, thick, minimum size=0.75cm, draw=red!70, fill=red!30] (r) at (8, 0) {};
-            \node[circle, thick, minimum size=0.6cm, draw=red!70, fill opacity=0] at (8, 0) {};
-            \draw[->, very thick, draw=black!70] (g) -- node[above, font=\small\ttfamily] {to\_yellow} (y);
-            \draw[->, very thick, draw=black!70] (y) -- node[above, font=\small\ttfamily] {to\_red} (r);
-            \draw[->, very thick, draw=black!70] (r) edge[in=-30, out=-150] node[above, font=\small\ttfamily] {to\_green} (g);
-            \draw[->, very thick, draw=black!70] (8, 1) -- node[right, font=\small\ttfamily] {turn\_on} (r);
-            \draw[->, very thick, draw=black!70] (r) edge[loop below] node[below, font=\small\ttfamily] {turn\_off} (r);
+            \tikzstyle{state} = [circle, thick, minimum size=0.75cm]
+            \tikzstyle{transition} = [->, very thick, draw=black!70]
+            \node[circle, thick, dashed, minimum size=0.75cm, draw=black!70] (off) at (0, 0) {};
+            \node[circle, thick, minimum size=0.6cm, draw=black!70, fill opacity=0] at (0, 0) {};
+            \node[state, draw=red!70, fill=red!30] (r) at (3, 0) {};
+            \node[state, draw=yellow, fill=yellow!50] (y) at (6, 0) {};
+            \node[state, draw=green!70, fill=green!30] (g) at (10, 0) {};
+            \draw[transition] (g) -- node[above, font=\small\ttfamily] {to\_yellow} (y);
+            \draw[transition] (y) -- node[above, font=\small\ttfamily] {to\_red} (r);
+            \draw[transition] (r) edge[in=-150, out=-30] node[below, font=\small\ttfamily] {to\_green} (g);
+            \draw[transition] (off) edge[in=-135, out=-45] node[below, font=\small\ttfamily] {turn\_on} (r);
+            \draw[transition] (r) -- node[above, font=\small\ttfamily] {turn\_off} (off);
+            \draw[transition] (-1, 0) -- (off);
         \end{tikzpicture}
     \end{figure}
 
@@ -791,12 +819,50 @@ fn reset_counter(self: &mut TrafficLight);
         \end{minted}
     \end{listing}
     The function is able to perform mutations over fields, due to usage of a mutable reference (\texttt{\&mut}),
-    but it is unable to transition between states.
+    \emph{but it is unable to transition between states}.
 
     \note{
         \begin{pt}
             Após a manutenção, é prático poder dar reset ao semáforo.
             Para tal usamos uma função impura, capaz de mutar o estado atual, mas não de fazer transições.
+        \end{pt}
+    }
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Workflow --- The new state machine}
+    With the new methods the state machine now looks like:
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \tikzstyle{state} = [circle, thick, minimum size=0.75cm]
+            \tikzstyle{transition} = [->, very thick, draw=black!70]
+            \node[circle, thick, dashed, minimum size=0.75cm, draw=black!70] (off) at (0, 0) {};
+            \node[circle, thick, minimum size=0.6cm, draw=black!70, fill opacity=0] at (0, 0) {};
+            \node[state, draw=red!70, fill=red!30] (r) at (3, 0) {};
+            \node[state, draw=yellow, fill=yellow!50] (y) at (6, 0) {};
+            \node[state, draw=green!70, fill=green!30] (g) at (10, 0) {};
+            \draw[transition] (g) -- node[above, font=\small\ttfamily] {to\_yellow} (y);
+            \draw[transition] (y) -- node[above, font=\small\ttfamily] {to\_red} (r);
+            \draw[transition] (r) edge[in=-150, out=-30] node[below, font=\small\ttfamily] {to\_green} (g);
+            \draw[transition] (off) edge[in=-135, out=-45] node[below, font=\small\ttfamily] {turn\_on} (r);
+            \draw[transition] (r) -- node[above, font=\small\ttfamily] {turn\_off} (off);
+            \draw[transition] (-1, 0) -- (off);
+
+            \draw[transition] (r) edge[loop above] node[above, font=\small\ttfamily]{*} (r);
+            \draw[transition] (y) edge[loop above] node[above, font=\small\ttfamily]{*} (y);
+            \draw[transition] (g) edge[loop above] node[above, font=\small\ttfamily]{*} (g);
+        \end{tikzpicture}
+    \end{figure}
+    \begin{listing}
+        \begin{minted}[linenos=false, frame=none]{text}
+*: requires_maintenance
+   reset_counter
+        \end{minted}
+    \end{listing}
+    \note{
+        \begin{pt}
+            Após a adição das novas funcções, ficamos com a seguinte máquina de estados.
         \end{pt}
     }
 \end{frame}
