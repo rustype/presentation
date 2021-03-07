@@ -438,25 +438,26 @@ class OuterSocket {
             \node[state, label=above:{\scriptsize\ttfamily end}] (end) at (6, 0) {};
             \node[state, minimum size= 0.45cm] (inner-end) at (6, 0) {};
             \draw[transition] (init) -- node[above, font=\tiny\ttfamily] {open:OK} (open);
-            \draw[transition] (init) edge[out=-15, in=-165] node[below, font=\tiny\ttfamily] {open:ERROR} (end);
-            \draw[transition] (open) -- node[above, font=\tiny\ttfamily] {read} (close);
+            \draw[transition] (init) -- (0, -0.85) -- node[below, font=\tiny\ttfamily] {open:ERROR} (6, -0.85) -- (end);
+            \draw[transition] (open) -- node[above, font=\tiny\ttfamily] {read:EOF} (close);
+            \draw[transition] (open) edge[loop below] node[above right, font=\tiny\ttfamily] {read:OK} (open);
             \draw[transition] (close) -- node[above, font=\tiny\ttfamily] {close} (end);
         \end{tikzpicture}
     \end{figure}
 
     \begin{listing}
         \centering
-        \begin{minted}{java}
+        \begin{minted}[fontsize=\footnotesize]{java}
 @Typestate("SocketProtocol")
 class Socket { /* ... */ }
         \end{minted}
     \end{listing}
     \begin{listing}
         \centering
-        \begin{minted}{java}
+        \begin{minted}[fontsize=\footnotesize]{java}
 typestate Socket {
     Init  = { Status open(): <OK: Open, ERROR: end> }
-    Open  = { void read(): <OK: Open> }
+    Open  = { Read read(): <OK: Open; EOF: Close> }
     Close = { void close(): end }
 }
         \end{minted}
@@ -512,7 +513,7 @@ fn main() {
     builder.setX(0.0);
     builder.build();
          // ^^^^^
-         // | error: you cannot buildlabel without setting `y`
+         // | error: you cannot build without setting `y`
 }
         \end{minted}
     \end{listing}
