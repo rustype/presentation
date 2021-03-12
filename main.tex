@@ -6,6 +6,8 @@
 \date{March 2021}
 \institute{NOVA School of Science and Technology}
 
+% \immediate\write18{if not exist tikz_external mkdir tikz_external}
+
 \usepackage{tikz}
 \usetikzlibrary{shapes,backgrounds,positioning}
 \tikzset{
@@ -19,14 +21,23 @@
 }
 \usepackage{xcolor}
 
+% \usepackage{pgfplots}
 \usepackage{pgfpages}
 \usepackage{hyperref}
-% \usepackage{listings}
-% \lstset{
-%     basicstyle=\small\ttfamily,
-%     frame=single,
-%     % numberstyle=\tiny,
-%     % numbers=left
+
+% \usepgfplotslibrary{external}
+% \tikzexternalize[
+%     prefix={tikz_external/},
+%     only named,
+% ]
+
+% \tikzset{
+%     export as png/.style={
+%         external/system call/.add={}{
+%             ; convert -density #1 -transparent white "\image.pdf" "\image.png"
+%         },
+%     },
+%     export as png/.default={200},
 % }
 
 \usepackage{amssymb}
@@ -643,6 +654,8 @@ fn main() {
     Consider a traffic light as a state machine.
     \begin{figure}
         \centering
+        % \tikzset{export as png}
+        % \tikzsetnextfilename{traffic_light_fsm}
         \begin{tikzpicture}
             \tikzstyle{state} = [circle, thick, minimum size=0.75cm]
             \tikzstyle{transition} = [->, very thick, draw=black!70]
